@@ -1,0 +1,123 @@
+import re
+from enum import Enum
+from decimal import Decimal, ROUND_DOWN
+
+class CCY(Enum):
+    """Currencies with various attributes:
+        int:     .dps        Number of decimal places allowed
+        Decimal: .exponent   Used for quantising Decimal of this CCY
+        str:     .symbol     Currency symbol
+        str:     .initial    Starting quantity for new users, defaults to 0
+        """
+    AUD = 1, 2, "AU$", "0"
+    CAD = 2, 2, "CA$", "0"
+    CHF = 3, 2, "SFr", "0"
+    EUR = 4, 2, "€",   "0"
+    GBP = 5, 2, "£",   "0"
+    JPY = 6, 0, "¥",   "0"
+    USD = 7, 2, "$",   "10000"
+
+    def __new__(cls, value: str, dps: int, symbol: str, initial: str = "0"):
+        obj = object.__new__(cls)
+        obj._value_ = value # Unique index
+
+        obj.dps       = dps
+        obj.exponent = Decimal(f"1{"" if dps == 0 else f".{dps * "0"}"}")
+        obj.symbol    = symbol
+        obj.initial  = initial
+
+        return obj
+
+    @classmethod
+    def from_string(cls, name: str):
+        name = name.strip().upper()
+        for c in CCY:
+            if name == c.name:
+                return c
+
+
+BASE_CURRENCY = CCY.USD
+FX_CURRENCIES: list[CCY] = [c for c in CCY if c != BASE_CURRENCY]
+FX_CURRENCY_NAMES: list[str] = [c.name for c in FX_CURRENCIES]
+
+
+def valid_quantity_sold(quantity: str, ccy: CCY) -> bool:
+    if ccy.dps == 0:
+        return quantity.isdigit()
+    if re.search(f"^\d+(\.\d{{0,{ccy.dps}}}0*)?$", quantity) is None:
+        return False
+    if re.search(r"^0(\.0*)?$", quantity) is not None:
+        return False
+    return True
+
+class Currency:
+    """Represents a coupling of a certain quantity of currency.
+
+    Args:
+        ccy (CCY): CCY of Currency. Immutable..
+        quantity (Decimal): Quantity of Currency. Should already be quantized to CCY's decimal places.
+    """
+    def __init__(self, ccy: CCY, quantity: Decimal):
+        self._ccy: CCY = ccy
+        self._name: str = ccy.name
+        self._quantity: Decimal = None
+        self.quantity: Decimal = quantity
+
+    @property
+    def ccy(self):
+        return self._ccy
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def quantity(self):
+        return self._quantity
+
+    @quantity.setter
+    def quantity(self, value: Decimal):
+        if -value.as_tuple().exponent != self.ccy.dps:
+            raise ValueError(f"Quantity ({value}) doesn't match decimal places of currency ({self.ccy.dps})")
+        self._quantity = value
+
+    @property
+    def quantity_str(self) -> str:
+        """Returns quantity as string"""
+        return str(self.quantity)
+
+    @classmethod
+    def from_string(self, ccy: CCY, quantity_str: str):
+        """Returns Currency given a string quantity.
+        Args:
+            ccy (CCY): CCY of Currency
+            quantity_str (str): Quantity of Currency as string. Should be no more precise than CCY dps."""
+        return Currency(ccy, Decimal(quantity_str).quantize(ccy.exponent))
+
+    def to_base(self, fx_rate: Decimal):
+        """Converts FX Currency to Base Currency object with fx_rate.
+
+        Args:
+            fx_rate (Decimal): The FX rate to be used.
+
+        Returns:
+            New Currency object in base currency
+        """
+        if self.ccy == BASE_CURRENCY:
+            raise NotImplementedError("Unexpected conversion of base to base")
+        new_quantity = (self.quantity / fx_rate).quantize(BASE_CURRENCY.exponent, ROUND_DOWN)
+        return Currency(BASE_CURRENCY, new_quantity)
+    
+    def to_fx(self, ccy: CCY, fx_rate: Decimal):
+        """Converts Base Currency to FX Currency object with fx_rate.
+
+        Args:
+            fx_rate (Decimal): The FX rate to be used.
+
+        Returns:
+            New Currency object in base currency
+        """
+        if self.ccy != BASE_CURRENCY:
+            raise NotImplementedError("Unexpected conversion of FX to FX")
+        new_quantity = (self.quantity * fx_rate).quantize(ccy.exponent, ROUND_DOWN)
+        return Currency(ccy, new_quantity)
