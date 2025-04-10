@@ -1,5 +1,5 @@
-import os
 from decimal import Decimal
+import os
 import requests
 
 from fx_trader.currency import CCY, BASE_CURRENCY, FX_CURRENCY_NAMES

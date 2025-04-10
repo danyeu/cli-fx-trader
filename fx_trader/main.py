@@ -3,6 +3,7 @@ from fx_trader import menu
 from fx_trader.logger import LOGGER
 from fx_trader.db import initialise_db
 
+
 def setup():
     if os.getenv("OER_API_KEY") is None:
         LOGGER.error("No API key.", print_msg=True)

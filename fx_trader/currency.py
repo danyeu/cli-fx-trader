@@ -2,6 +2,7 @@ import re
 from enum import Enum
 from decimal import Decimal, ROUND_DOWN
 
+
 class CCY(Enum):
     """Currencies with various attributes:
         int:     .dps        Number of decimal places allowed

@@ -1,6 +1,8 @@
 from decimal import Decimal
+
 from fx_trader.currency import Currency
 from fx_trader.db import *
+
 
 class Transaction:
     """Represents a transaction exchanging one currency for another.

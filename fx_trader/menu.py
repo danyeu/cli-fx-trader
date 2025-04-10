@@ -1,13 +1,12 @@
-import re
 from getpass import getpass
 from typing import Callable, Optional
 
 from fx_trader.currency import *
 from fx_trader.db import *
-from fx_trader.security import hash_password
 from fx_trader.fx import *
-from fx_trader.user import user
+from fx_trader.security import hash_password
 from fx_trader.transaction import Transaction
+from fx_trader.user import user
 
 
 def print_lines(title: str = None, initial_newline: bool = True):
