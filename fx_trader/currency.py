@@ -43,6 +43,13 @@ FX_CURRENCY_NAMES: list[str] = [c.name for c in FX_CURRENCIES]
 
 
 def valid_quantity_sold(quantity: str, ccy: CCY) -> bool:
+    """Returns whether the string quantity is valid amount of the specified currency to sell.
+    Ensures quantity is positive and has no more decimal places than the currency allows.
+
+        Args:
+            quantity (str): The quantity traded as a string.
+            ccy (CCY): The currency.
+    """
     if ccy.dps == 0:
         return quantity.isdigit()
     if re.search(f"^\d+(\.\d{{0,{ccy.dps}}}0*)?$", quantity) is None:
