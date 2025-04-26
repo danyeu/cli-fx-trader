@@ -40,7 +40,7 @@ def initialise_db() -> bool:
     finally:
         if connection:
             connection.close()
-    
+
     return True
 
 def get_user_id(username: str) -> int:
