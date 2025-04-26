@@ -1,22 +1,22 @@
 import logging
 
 class CustomLogger(logging.Logger):
-    def debug(self, msg, *args, print_msg=False,**kwargs):
+    def debug(self, msg, *args, print_msg=False, **kwargs):
         if print_msg:
             print(msg)
         super().debug(msg, *args, **kwargs)
 
-    def info(self, msg, *args, print_msg=False,**kwargs):
+    def info(self, msg, *args, print_msg=False, **kwargs):
         if print_msg:
             print(msg)
         super().info(msg, *args, **kwargs)
 
-    def warning(self, msg, *args, print_msg=False,**kwargs):
+    def warning(self, msg, *args, print_msg=False, **kwargs):
         if print_msg:
             print(msg)
         super().warning(msg, *args, **kwargs)
 
-    def error(self, msg, *args, print_msg=False,**kwargs):
+    def error(self, msg, *args, print_msg=False, **kwargs):
         if print_msg:
             print(msg)
         super().error(msg, *args, **kwargs)
@@ -26,7 +26,7 @@ class CustomLogger(logging.Logger):
             print(msg)
         super().exception(msg, *args, exc_info, **kwargs)
 
-    def critical(self, msg, *args, print_msg=False,**kwargs):
+    def critical(self, msg, *args, print_msg=False, **kwargs):
         if print_msg:
             print(msg)
         super().critical(msg, *args, **kwargs)
