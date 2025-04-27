@@ -6,7 +6,7 @@ from decimal import Decimal, ROUND_DOWN
 class CCY(Enum):
     """Currencies with various attributes:
         int:     .dps        Number of decimal places allowed
-        Decimal: .exponent   Used for quantising Decimal of this CCY
+        Decimal: .q          Pass as argument when quantising a Decimal of this CCY
         str:     .symbol     Currency symbol
         str:     .initial    Starting quantity for new users, defaults to 0
         """
@@ -19,13 +19,19 @@ class CCY(Enum):
     USD = 7, 2, "$",   "10000"
 
     def __new__(cls, value: str, dps: int, symbol: str, initial: str = "0"):
+        # Validating developer has used valid values
+        assert dps >= 0
+        assert len(symbol) > 0
+        q = Decimal("1" if dps == 0 else f"1.{dps * "0"}")
+        assert -Decimal(initial).normalize().as_tuple().exponent <= dps
+
         obj = object.__new__(cls)
         obj._value_ = value # Unique index
 
-        obj.dps       = dps
-        obj.exponent = Decimal(f"1{"" if dps == 0 else f".{dps * "0"}"}")
-        obj.symbol    = symbol
-        obj.initial  = initial
+        obj.dps     = dps
+        obj.q       = q
+        obj.symbol  = symbol
+        obj.initial = initial
 
         return obj
 
@@ -52,7 +58,7 @@ def valid_quantity_sold(quantity: str, ccy: CCY) -> bool:
     """
     if ccy.dps == 0:
         return quantity.isdigit()
-    if re.search(f"^\d+(\.\d{{0,{ccy.dps}}}0*)?$", quantity) is None:
+    if re.search(f"^\\d+(\\.\\d{{0,{ccy.dps}}}0*)?$", quantity) is None:
         return False
     if re.search(r"^0(\.0*)?$", quantity) is not None:
         return False
@@ -100,7 +106,7 @@ class Currency:
         Args:
             ccy (CCY): CCY of Currency
             quantity_str (str): Quantity of Currency as string. Should be no more precise than CCY dps."""
-        return Currency(ccy, Decimal(quantity_str).quantize(ccy.exponent))
+        return Currency(ccy, Decimal(quantity_str).quantize(ccy.q))
 
     def to_base(self, fx_rate: Decimal):
         """Converts FX Currency to Base Currency object with fx_rate.
@@ -113,7 +119,7 @@ class Currency:
         """
         if self.ccy == BASE_CURRENCY:
             raise NotImplementedError("Unexpected conversion of base to base")
-        new_quantity = (self.quantity / fx_rate).quantize(BASE_CURRENCY.exponent, ROUND_DOWN)
+        new_quantity = (self.quantity / fx_rate).quantize(BASE_CURRENCY.q, ROUND_DOWN)
         return Currency(BASE_CURRENCY, new_quantity)
     
     def to_fx(self, ccy: CCY, fx_rate: Decimal):
@@ -127,5 +133,5 @@ class Currency:
         """
         if self.ccy != BASE_CURRENCY:
             raise NotImplementedError("Unexpected conversion of FX to FX")
-        new_quantity = (self.quantity * fx_rate).quantize(ccy.exponent, ROUND_DOWN)
+        new_quantity = (self.quantity * fx_rate).quantize(ccy.q, ROUND_DOWN)
         return Currency(ccy, new_quantity)
