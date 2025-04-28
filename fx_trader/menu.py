@@ -150,7 +150,7 @@ def buy_fx():
         if len(base_quantity_sold_str) == 0:
             print("Aborting: Blank quantity.")
             return
-        if not valid_quantity_sold(base_quantity_sold_str, BASE_CURRENCY):
+        if not valid_quantity_sold(BASE_CURRENCY, base_quantity_sold_str):
             print("Invalid quantity. Try again.")
             continue
         base_sold = Currency.from_string(BASE_CURRENCY, base_quantity_sold_str)
@@ -208,7 +208,7 @@ def sell_fx():
         if len(fx_quantity_sold_str) == 0:
             print("Aborting: Blank quantity.")
             return
-        if not valid_quantity_sold(fx_quantity_sold_str, fx_ccy):
+        if not valid_quantity_sold(fx_ccy, fx_quantity_sold_str):
             print("Invalid quantity. Try again.")
             continue
         fx_sold = Currency.from_string(fx_ccy, fx_quantity_sold_str)

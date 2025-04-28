@@ -19,17 +19,11 @@ class CCY(Enum):
     USD = 7, 2, "$",   "10000"
 
     def __new__(cls, value: str, dps: int, symbol: str, initial: str = "0"):
-        # Validating developer has used valid values
-        assert dps >= 0
-        assert len(symbol) > 0
-        q = Decimal("1" if dps == 0 else f"1.{dps * "0"}")
-        assert -Decimal(initial).normalize().as_tuple().exponent <= dps
-
         obj = object.__new__(cls)
         obj._value_ = value # Unique index
 
         obj.dps     = dps
-        obj.q       = q
+        obj.q       = Decimal("1" if dps == 0 else f"1.{dps * "0"}")
         obj.symbol  = symbol
         obj.initial = initial
 
@@ -48,7 +42,7 @@ FX_CURRENCIES: list[CCY] = [c for c in CCY if c != BASE_CURRENCY]
 FX_CURRENCY_NAMES: list[str] = [c.name for c in FX_CURRENCIES]
 
 
-def valid_quantity_sold(quantity: str, ccy: CCY) -> bool:
+def valid_quantity_sold(ccy: CCY, quantity: str) -> bool:
     """Returns whether the string quantity is valid amount of the specified currency to sell.
     Ensures quantity is positive and has no more decimal places than the currency allows.
 
@@ -68,7 +62,7 @@ class Currency:
     """Represents a coupling of a certain quantity of currency.
 
     Args:
-        ccy (CCY): CCY of Currency. Immutable..
+        ccy (CCY): CCY of Currency. Immutable.
         quantity (Decimal): Quantity of Currency. Should already be quantized to CCY's decimal places.
     """
     def __init__(self, ccy: CCY, quantity: Decimal):
@@ -91,21 +85,22 @@ class Currency:
 
     @quantity.setter
     def quantity(self, value: Decimal):
+        # Precision of quantity must match exactly precision of CCY
         if -value.as_tuple().exponent != self.ccy.dps:
             raise ValueError(f"Quantity ({value}) doesn't match decimal places of currency ({self.ccy.dps})")
         self._quantity = value
 
     @property
     def quantity_str(self) -> str:
-        """Returns quantity as string"""
+        """Returns quantity as string."""
         return str(self.quantity)
 
     @classmethod
     def from_string(self, ccy: CCY, quantity_str: str):
         """Returns Currency given a string quantity.
         Args:
-            ccy (CCY): CCY of Currency
-            quantity_str (str): Quantity of Currency as string. Should be no more precise than CCY dps."""
+            ccy (CCY): CCY of Currency.
+            quantity_str (str): Quantity of Currency as string. Must not be more precise than CCY dps."""
         return Currency(ccy, Decimal(quantity_str).quantize(ccy.q))
 
     def to_base(self, fx_rate: Decimal):
@@ -115,13 +110,13 @@ class Currency:
             fx_rate (Decimal): The FX rate to be used.
 
         Returns:
-            New Currency object in base currency
+            New Currency object in base currency.
         """
         if self.ccy == BASE_CURRENCY:
             raise NotImplementedError("Unexpected conversion of base to base")
         new_quantity = (self.quantity / fx_rate).quantize(BASE_CURRENCY.q, ROUND_DOWN)
         return Currency(BASE_CURRENCY, new_quantity)
-    
+
     def to_fx(self, ccy: CCY, fx_rate: Decimal):
         """Converts Base Currency to FX Currency object with fx_rate.
 
