@@ -50,11 +50,14 @@ def valid_quantity_sold(ccy: CCY, quantity: str) -> bool:
             quantity (str): The quantity traded as a string.
             ccy (CCY): The currency.
     """
+    # should not match zero quantity
+    if re.search(r"^0+(\.0*)?$", quantity) is not None:
+        return False
+    # 0dp should just be a non-negative integer
     if ccy.dps == 0:
         return quantity.isdigit()
+    # should match valid non-zero quantity
     if re.search(f"^\\d+(\\.\\d{{0,{ccy.dps}}}0*)?$", quantity) is None:
-        return False
-    if re.search(r"^0(\.0*)?$", quantity) is not None:
         return False
     return True
 
