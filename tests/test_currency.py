@@ -5,6 +5,7 @@ from fx_trader.currency import *
 
 currencies = [c for c in CCY]
 
+# === CCY: Attributes ===
 @pytest.mark.parametrize("ccy", currencies)
 def test_dps(ccy):
     assert isinstance(ccy.dps, int)
@@ -29,6 +30,7 @@ def test_initial(ccy):
     # Initial must not be more precise than CCY allows (via dps)
     assert -Decimal(ccy.initial).normalize().as_tuple().exponent <= ccy.dps
 
+# === CCY: USD ===
 def test_ccy_usd():
     usd = CCY.USD
     assert usd.name == "USD"
@@ -36,6 +38,7 @@ def test_ccy_usd():
     assert usd.q == Decimal("1.00")
     assert usd.symbol == "$"
 
+# === CCY: from_string ===
 def test_ccy_from_string():
     usd_strings = ["USD", "Usd", "usd", " USD", "  Usd ", "  usd   "]
     for s in usd_strings:
@@ -46,6 +49,7 @@ def test_ccy_from_string_invalid():
     for s in usd_strings:
         assert CCY.from_string(s) is None
 
+# === Currency ===
 def test_currency_usd_creation():
     quantities = ["0.00", "1.00", "2.20", "3.33", "4.04", "12345.00"]
     for q in quantities:
@@ -63,6 +67,7 @@ def test_currency_usd_creation_invalid():
         except ValueError:
             assert True
 
+# === Currency: from_string ===
 def test_currency_usd_creation_from_string():
     quantities = ["0.00", "1.00", "2.20", "3.33", "4.04", "12345.00"]
     for q in quantities:
