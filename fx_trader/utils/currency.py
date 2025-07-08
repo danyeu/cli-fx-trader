@@ -9,7 +9,7 @@ class CCY(Enum):
         Decimal: .q          Pass as argument when quantising a Decimal of this CCY
         str:     .symbol     Currency symbol
         str:     .initial    Starting quantity for new users, defaults to 0
-        """
+    """
     AUD = 1, 2, "AU$", "0"
     CAD = 2, 2, "CA$", "0"
     CHF = 3, 2, "SFr", "0"
@@ -36,30 +36,30 @@ class CCY(Enum):
             if name == c.name:
                 return c
 
+    def valid_quantity(self, quantity: str) -> bool:
+        """Returns whether the string quantity is valid amount of the specified currency.
+           Ensures quantity is positive and has no more decimal places than the currency allows.
+
+            Args:
+                quantity (str): The quantity traded as a string.
+                ccy (CCY): The currency.
+        """
+        # should not match zero quantity
+        if re.search(r"^0+(\.0*)?$", quantity) is not None:
+            return False
+        # 0dp should just be a non-negative integer
+        if self.dps == 0:
+            return re.search(r"^0*[0-9]+(\.0*)?$", quantity) is not None
+        # should match valid non-zero quantity
+        if re.search(f"^\\d+(\\.\\d{{0,{self.dps}}}0*)?$", quantity) is None:
+            return False
+        return True
+
 
 BASE_CURRENCY = CCY.USD
 FX_CURRENCIES: list[CCY] = [c for c in CCY if c != BASE_CURRENCY]
 FX_CURRENCY_NAMES: list[str] = [c.name for c in FX_CURRENCIES]
 
-
-def valid_quantity_sold(ccy: CCY, quantity: str) -> bool:
-    """Returns whether the string quantity is valid amount of the specified currency to sell.
-    Ensures quantity is positive and has no more decimal places than the currency allows.
-
-        Args:
-            quantity (str): The quantity traded as a string.
-            ccy (CCY): The currency.
-    """
-    # should not match zero quantity
-    if re.search(r"^0+(\.0*)?$", quantity) is not None:
-        return False
-    # 0dp should just be a non-negative integer
-    if ccy.dps == 0:
-        return quantity.isdigit()
-    # should match valid non-zero quantity
-    if re.search(f"^\\d+(\\.\\d{{0,{ccy.dps}}}0*)?$", quantity) is None:
-        return False
-    return True
 
 class Currency:
     """Represents a coupling of a certain quantity of currency.
@@ -101,6 +101,7 @@ class Currency:
     @classmethod
     def from_string(self, ccy: CCY, quantity_str: str):
         """Returns Currency given a string quantity.
+
         Args:
             ccy (CCY): CCY of Currency.
             quantity_str (str): Quantity of Currency as string. Must not be more precise than CCY dps."""
@@ -110,7 +111,7 @@ class Currency:
         """Converts FX Currency to Base Currency object with fx_rate.
 
         Args:
-            fx_rate (Decimal): The FX rate to be used.
+            fx_rate (Decimal): The FX rate used, in FX per base.
 
         Returns:
             New Currency object in base currency.
@@ -124,7 +125,7 @@ class Currency:
         """Converts Base Currency to FX Currency object with fx_rate.
 
         Args:
-            fx_rate (Decimal): The FX rate to be used.
+            fx_rate (Decimal): The FX rate used, in FX per base.
 
         Returns:
             New Currency object in base currency

@@ -2,8 +2,8 @@ from decimal import Decimal
 import os
 import requests
 
-from fx_trader.currency import CCY, BASE_CURRENCY, FX_CURRENCY_NAMES
-from fx_trader.logger import LOGGER
+from utils.currency import CCY, BASE_CURRENCY, FX_CURRENCY_NAMES
+from utils.logger import LOGGER
 
 RATES_URL = f"""https://openexchangerates.org/api/latest.json?app_id={os.getenv("OER_API_KEY")}&base={BASE_CURRENCY.name}&symbols={",".join(FX_CURRENCY_NAMES)}"""
 

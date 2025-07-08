@@ -1,12 +1,12 @@
 from decimal import Decimal
 
-from fx_trader.currency import Currency
-from fx_trader.db import *
+from utils.currency import Currency
+from utils.db import get_currency_owned, update_currencies
+from utils.logger import LOGGER
 
 
 class Transaction:
-    """Represents a transaction exchanging one currency for another.
-    """
+    """Represents a transaction exchanging one currency for another."""
     def __init__(self, currency_bought: Currency, currency_sold: Currency, fx_rate: Decimal = None):
         """Args:
             currency_bought (Currency): Currency to be bought.

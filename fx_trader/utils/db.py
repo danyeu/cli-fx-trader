@@ -1,10 +1,10 @@
 import sqlite3
 import pandas as pd
 
-from fx_trader.logger import LOGGER
-from fx_trader.security import verify_password
-from fx_trader.currency import Currency, CCY
-from fx_trader.user import user
+from utils.logger import LOGGER
+from utils.security import verify_password
+from utils.currency import Currency, CCY
+from utils.user import user
 
 DB_NAME = "fx_trader.db"
 

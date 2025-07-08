@@ -1,12 +1,12 @@
 from getpass import getpass
 from typing import Callable, Optional
 
-from fx_trader.currency import *
-from fx_trader.db import *
-from fx_trader.fx import *
-from fx_trader.security import hash_password
-from fx_trader.transaction import Transaction
-from fx_trader.user import user
+from utils.currency import *
+from utils.db import *
+from utils.fx import *
+from utils.security import hash_password
+from utils.transaction import Transaction
+from utils.user import user
 
 
 def print_lines(title: str = None, initial_newline: bool = True):
@@ -150,7 +150,7 @@ def buy_fx():
         if len(base_quantity_sold_str) == 0:
             print("Aborting: Blank quantity.")
             return
-        if not valid_quantity_sold(BASE_CURRENCY, base_quantity_sold_str):
+        if not BASE_CURRENCY.valid_quantity(base_quantity_sold_str):
             print("Invalid quantity. Try again.")
             continue
         base_sold = Currency.from_string(BASE_CURRENCY, base_quantity_sold_str)
@@ -208,7 +208,7 @@ def sell_fx():
         if len(fx_quantity_sold_str) == 0:
             print("Aborting: Blank quantity.")
             return
-        if not valid_quantity_sold(fx_ccy, fx_quantity_sold_str):
+        if not fx_ccy.valid_quantity(fx_quantity_sold_str):
             print("Invalid quantity. Try again.")
             continue
         fx_sold = Currency.from_string(fx_ccy, fx_quantity_sold_str)
