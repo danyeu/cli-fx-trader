@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from decimal import Decimal
 from logging import getLogger
 
@@ -6,17 +7,24 @@ from utils.db import get_currency_owned, update_currencies
 
 logger = getLogger(__name__)
 
+# Seconds after FX rate quote at which the transaction timesout
+quote_timeout: datetime = timedelta(seconds=10)
+
+QUOTE_TIMEOUT_SECONDS: str = str(int(quote_timeout.total_seconds()))
+
 class Transaction:
     """Represents a transaction exchanging one currency for another."""
-    def __init__(self, currency_bought: Currency, currency_sold: Currency, fx_rate: Decimal = None):
+    def __init__(self, currency_bought: Currency, currency_sold: Currency, fx_rate: Decimal = None, quote_time: datetime = datetime.now()):
         """Args:
             currency_bought (Currency): Currency to be bought.
             currency_sold (Currency): Currency to be sold.
             fx_rate (Decimal, optional): FX rate exchanged at. Used for __str__ only.
+            quote_time (datetime, optional): Time FX rate was quoted. Defaults to current time.
         """
         self.b = currency_bought
         self.s = currency_sold
         self.fx_rate = fx_rate
+        self.quote_time = quote_time
         self._validate_init()
 
     def _validate_init(self):
@@ -36,6 +44,11 @@ class Transaction:
         logger.error("Error executing transaction.", exc_info=True)
         return False
 
+    def expired(self) -> bool:
+        if datetime.now() - self.quote_time > quote_timeout:
+            return True
+        return False
+
     def __str__(self):
         if self.fx_rate:
             return "{} {} @ {} => {} {}".format(
@@ -45,3 +58,6 @@ class Transaction:
         return "{} {} => {} {}".format(
                 self.s.ccy.name, self.s.quantity_str,
                 self.b.ccy.name, self.b.quantity_str)
+
+    def print(self):
+        print(self)

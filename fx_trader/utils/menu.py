@@ -1,3 +1,4 @@
+from datetime import datetime
 from getpass import getpass
 from logging import getLogger
 from typing import Callable, Iterable
@@ -6,7 +7,8 @@ from utils.currency import *
 from utils.db import *
 from utils.fx import *
 from utils.security import hash_password
-from utils.transaction import Transaction
+from utils.transaction import Transaction, QUOTE_TIMEOUT_SECONDS
+
 from utils.user import user
 
 logger = getLogger(__name__)
@@ -172,21 +174,27 @@ def buy_fx():
         if (fx_rate := get_rate(fx_ccy)) is None:
             print("Error getting FX rates.")
             return
+        quote_time = datetime.now()
 
         fx_bought = base_sold.to_fx(fx_ccy, fx_rate)
-        transaction = Transaction(fx_bought, base_sold, fx_rate)
-        print("Quote valid for 10 seconds:")
-        print(transaction)
+        transaction = Transaction(fx_bought, base_sold, fx_rate, quote_time)
+
+        print(F"Quote valid for {QUOTE_TIMEOUT_SECONDS} seconds:")
+        transaction.print()
         while True:
             confirm = input("Confirm (y/n): ").strip().lower()
+            if transaction.expired():
+                print("Quote expired. Try again.")
+                return
+
             if confirm == "n":
                 print("Trade aborted.")
                 return
             elif confirm == "y":
                 if transaction.execute():
                     print("Confirmed!")
-                    return
-                print("Error executing transaction.")
+                else:
+                    print("Error executing transaction.")
                 return
 
 @print_lines("Sell FX")
@@ -231,21 +239,27 @@ def sell_fx():
         if (fx_rate := get_rate(fx_ccy)) is None:
             print("Error getting FX rates.")
             return
+        quote_time = datetime.now()
 
         base_bought = fx_sold.to_base(fx_rate)
-        transaction = Transaction(base_bought, fx_sold, fx_rate)
-        print("Quote valid for 10 seconds:")
-        print(transaction)
+        transaction = Transaction(base_bought, fx_sold, fx_rate, quote_time)
+
+        print(F"Quote valid for {QUOTE_TIMEOUT_SECONDS} seconds:")
+        transaction.print()
         while True:
             confirm = input("Confirm (y/n): ").strip().lower()
+            if transaction.expired():
+                print("Quote expired. Try again.")
+                return
+
             if confirm == "n":
                 print("Trade aborted.")
                 return
             elif confirm == "y":
                 if transaction.execute():
                     print("Confirmed!")
-                    return
-                print("Error executing transaction.")
+                else:
+                    print("Error executing transaction.")
                 return
 
 class MenuOption:
