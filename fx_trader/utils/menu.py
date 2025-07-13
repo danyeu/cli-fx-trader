@@ -1,6 +1,6 @@
 from getpass import getpass
 from logging import getLogger
-from typing import Callable, Optional
+from typing import Callable, Iterable
 
 from utils.currency import *
 from utils.db import *
@@ -12,6 +12,7 @@ from utils.user import user
 logger = getLogger(__name__)
 
 def print_lines(title: str = None, initial_newline: bool = True):
+    """Prints title in the correct menu format before executing the function."""
     def decorator(func):
         def wrapper(*args, **kwargs):
             if initial_newline:
@@ -24,6 +25,7 @@ def print_lines(title: str = None, initial_newline: bool = True):
     return decorator
 
 def main_menu():
+    """Initialises the menu and starts the main menu loop."""
     while True:
         login_marker = "" if not user.exists() else f"[{user.username}]"
 
@@ -49,6 +51,7 @@ def main_menu():
 
 @print_lines("Create New User")
 def new_user() -> None:
+    """Menu for creating a new user."""
     print("Enter username and password. Enter blank value to cancel.")
     while True:
         new_username = input("Username: ").strip().lower()
@@ -78,6 +81,7 @@ def new_user() -> None:
 
 @print_lines("Login")
 def login():
+    """Menu for logging in."""
     print("Enter username and password. Enter blank value to cancel.")
     while True:
         username = input("Username: ").strip().lower()
@@ -99,24 +103,25 @@ def login():
 
 @print_lines()
 def logout():
+    """User logout."""
     print(f"Logged out of {user.username}")
     user.logout()
 
 @print_lines()
 def close():
+    """Exit application."""
     print("Goodbye!")
     exit()
 
-def print_args(*args: str):
-    print("".join(args))
-
 @print_lines()
 def show_portfolio():
+    """Prints current portfolio."""
     df = get_portfolio(user.username)
     print(df.to_string(index=False, header=["Currency", "Quantity"]))
 
 @print_lines("Show Rates")
 def show_rates():
+    """Prints all current FX rates."""
     try:
         rates = get_rates()
         print("1 USD =")
@@ -127,6 +132,7 @@ def show_rates():
 
 @print_lines("Buy FX")
 def buy_fx():
+    """Menu for buying FX."""
     print("Enter FX to buy. Enter blank value to cancel.")
     print(", ".join(FX_CURRENCY_NAMES))
     # Verify FX
@@ -185,6 +191,7 @@ def buy_fx():
 
 @print_lines("Sell FX")
 def sell_fx():
+    """Menu for selling FX."""
     print("Enter FX to sell. Enter blank value to cancel.")
     print(", ".join(FX_CURRENCY_NAMES))
     # Verify FX
@@ -242,6 +249,13 @@ def sell_fx():
                 return
 
 class MenuOption:
+    """Represents one menu option a user can select.
+
+    Args:
+        selector (str): A single alphanumeric character the user uses to select the option.
+        description (str): The description of the option shown to the user.
+        function (Callable): The function executed when the option is selected.
+    """
     def __init__(self, selector: str, description: str, function: Callable):
         selector = selector.strip().lower()
         if len(selector) != 1:
@@ -269,24 +283,24 @@ class MenuOption:
 
 
 class Menu:
-    def __init__(self, options: Optional[list[MenuOption]] = []):
-        self.options = []
+    """Represents the menu."""
+    def __init__(self, options: Iterable[MenuOption] = []):
+        self.options = {}
         for option in options:
             self.add(option)
 
     def select(self, selector: str, *args, **kwargs):
-        for option in self.options:
-            if selector == option.selector:
-                option.execute(*args, **kwargs)
+        if selector in self.options:
+            self.options[selector].execute(*args, **kwargs)
 
     def add(self, option: MenuOption):
         # Ensure no duplicate selectors
-        if option.selector in [o.selector for o in self.options]:
+        if option.selector in self.options:
             raise ValueError(f"Selector already in menu options: {option.selector}")
-        self.options.append(option)
+        self.options[option.selector] = option
 
     def print(self):
-        for option in self.options:
+        for option in self.options.values():
             option.print()
 
     def run(self):
