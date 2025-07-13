@@ -1,9 +1,10 @@
 from decimal import Decimal
+from logging import getLogger
 
 from utils.currency import Currency
 from utils.db import get_currency_owned, update_currencies
-from utils.logger import LOGGER
 
+logger = getLogger(__name__)
 
 class Transaction:
     """Represents a transaction exchanging one currency for another."""
@@ -32,7 +33,7 @@ class Transaction:
         if update_currencies(self.b.ccy, new_b.quantity_str, self.s.ccy, new_s.quantity_str):
             return True
 
-        LOGGER.error("Error executing transaction.", exc_info=True)
+        logger.error("Error executing transaction.", exc_info=True)
         return False
 
     def __str__(self):

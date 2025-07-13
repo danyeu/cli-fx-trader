@@ -1,4 +1,5 @@
 from getpass import getpass
+from logging import getLogger
 from typing import Callable, Optional
 
 from utils.currency import *
@@ -8,6 +9,7 @@ from utils.security import hash_password
 from utils.transaction import Transaction
 from utils.user import user
 
+logger = getLogger(__name__)
 
 def print_lines(title: str = None, initial_newline: bool = True):
     def decorator(func):

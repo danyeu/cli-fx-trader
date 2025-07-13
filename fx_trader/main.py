@@ -1,17 +1,24 @@
+from logging import getLogger
 import os
 from utils import menu
-from utils.logger import LOGGER
+from utils.logger import setup_logging
 from utils.db import initialise_db
+
+setup_logging()
+logger = getLogger(__name__)
 
 def setup():
     """Set up the environment for the application."""
-    if os.getenv("OER_API_KEY") is None:
-        LOGGER.error("No API key.", print_msg=True)
+    def print_log_exit(message: str):
+        print(message)
+        logger.error(message)
         os._exit(1)
 
+    if os.getenv("OER_API_KEY") is None:
+        print_log_exit("No API key.")
+
     if not initialise_db():
-        LOGGER.error("Failed to initialise database.", print_msg=True)
-        os._exit(1)
+        print_log_exit("Failed to initialise database.")
 
 def main():
     setup()

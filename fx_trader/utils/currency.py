@@ -1,7 +1,9 @@
+from logging import getLogger
 import re
 from enum import Enum
 from decimal import Decimal, ROUND_DOWN
 
+logger = getLogger(__name__)
 
 class CCY(Enum):
     """Currencies with various attributes:
