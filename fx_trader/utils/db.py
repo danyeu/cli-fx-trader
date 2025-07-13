@@ -120,6 +120,7 @@ def check_password(username: str, password: str) -> bool:
     return verify_password(password, actual_hashed_password)
 
 def get_portfolio(username: str) -> pd.DataFrame:
+    logger.debug("Getting portfolio: user_id %s", user.uid)
     try:
         with sqlite3.connect(DB_NAME) as connection:
             query = """SELECT p.currency, p.quantity
@@ -135,11 +136,12 @@ def get_portfolio(username: str) -> pd.DataFrame:
             connection.close()
 
 def get_currency_owned(ccy: CCY) -> Currency:
+    logger.debug("Getting currency: user_id %s: %s", user.uid, ccy.name)
     try:
         with sqlite3.connect(DB_NAME) as connection:
             cursor = connection.cursor()
             cursor.execute("""SELECT quantity FROM portfolio
-                WHERE user_id = ? AND currency = ?""", (user.id, ccy.name))
+                WHERE user_id = ? AND currency = ?""", (user.uid, ccy.name))
             result = cursor.fetchone()
             quantity_str = result[0]
             return Currency.from_string(ccy, quantity_str)
@@ -152,13 +154,15 @@ def get_currency_owned(ccy: CCY) -> Currency:
             connection.close()
 
 def update_currencies(currency1: CCY, quantity1: str, currency2: CCY, quantity2: str) -> bool:
+    logger.debug("Setting currencies: user_id %s: %s %s, %s %s",
+                user.uid, currency1.name, quantity1, currency2.name, quantity2)
     try:
         with sqlite3.connect(DB_NAME) as connection:
             cursor = connection.cursor()
             cursor.execute("UPDATE portfolio SET quantity = ? WHERE user_id = ? and currency = ?",
-                           (quantity1, user.id, currency1.name))
+                           (quantity1, user.uid, currency1.name))
             cursor.execute("UPDATE portfolio SET quantity = ? WHERE user_id = ? and currency = ?",
-                           (quantity2, user.id, currency2.name))
+                           (quantity2, user.uid, currency2.name))
             connection.commit()
             return True
     except Exception:
