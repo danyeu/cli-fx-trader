@@ -2,3 +2,4 @@ myenv
 .env
 *.db
 __pycache__
+*.json
